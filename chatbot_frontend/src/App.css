@@ -1,0 +1,41 @@
+/* App.css — Additional app-level styles */
+/* Most styles live in index.css design system */
+/* This file handles edge-case component compositions */
+
+.app-container {
+  position: relative;
+}
+
+/* Ensure proper stacking context */
+.sidebar {
+  z-index: 10;
+}
+
+.chat-area {
+  z-index: 5;
+}
+
+/* Connection status indicator */
+.connection-status {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 50;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.connection-status.connected {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+.connection-status.disconnected {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
