@@ -29,9 +29,10 @@ class AgentState(TypedDict):
 # --- LLM Setup ---
 # xAI's API is OpenAI compatible, so we can use the ChatOpenAI client
 llm = ChatOpenAI(
-    model="grok-2-latest",
-    api_key=os.getenv("XAI_API_KEY"),
-    base_url="https://api.x.ai/v1",
+    model="google/gemini-2.5-flash",
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url="https://openrouter.ai/api/v1",
+    max_tokens=4096,
     temperature=0.7,
     streaming=False,
 )

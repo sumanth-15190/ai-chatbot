@@ -70,10 +70,10 @@ async def chat(request: ChatRequest):
     if not request.message.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
-    if not os.getenv("XAI_API_KEY"):
+    if not os.getenv("OPENROUTER_API_KEY"):
         raise HTTPException(
             status_code=500,
-            detail="XAI_API_KEY not configured. Please set it in the .env file."
+            detail="OPENROUTER_API_KEY not configured. Please set it in the .env file."
         )
 
     try:
