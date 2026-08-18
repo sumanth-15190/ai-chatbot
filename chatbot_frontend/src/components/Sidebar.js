@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   MessageSquarePlus, Mic, Volume2, BookOpen, 
   Search, PanelLeftClose, MessageSquare, Trash2, 
