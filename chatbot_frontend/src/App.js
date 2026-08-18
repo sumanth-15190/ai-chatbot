@@ -43,8 +43,8 @@ function App() {
   const [currentView, setCurrentView] = useState('chat'); // 'chat' | 'stt' | 'tts'
 
   // --- Advanced Features State ---
-  const [isTTSActive, setIsTTSActive] = useState(false);
-  const [isSTTActive, setIsSTTActive] = useState(false);
+  const [isTTSActive] = useState(false);
+  const [isSTTActive] = useState(false);
 
   const speakText = (text) => {
     if (!window.speechSynthesis) return;
@@ -132,7 +132,7 @@ function App() {
         setActiveSessionId(null);
       }
     },
-    [activeSessionId]
+    [activeSessionId, isTTSActive, isSTTActive]
   );
 
   // --- Send message ---

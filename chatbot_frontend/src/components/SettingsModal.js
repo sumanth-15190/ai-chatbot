@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Info, ShieldAlert, FileText, ChevronRight } from 'lucide-react';
+import { X, Info, ShieldAlert, FileText } from 'lucide-react';
 
 const SettingsModal = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState('about');

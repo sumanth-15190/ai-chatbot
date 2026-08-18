@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { 
   MessageSquarePlus, Mic, Volume2, BookOpen, 
   Search, PanelLeftClose, MessageSquare, Trash2, 

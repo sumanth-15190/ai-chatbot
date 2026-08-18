@@ -6,7 +6,6 @@ import MockGoogleLogin from './MockGoogleLogin';
  * Uses localStorage for mock auth (demo-ready, no real backend needed).
  */
 const LoginModal = ({ onClose, onLogin }) => {
-  const [activeTab, setActiveTab] = useState('login');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -40,11 +39,6 @@ const LoginModal = ({ onClose, onLogin }) => {
       return;
     }
 
-    if (activeTab === 'signup' && !formData.name.trim()) {
-      setError('Please enter your name');
-      return;
-    }
-
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
@@ -58,7 +52,7 @@ const LoginModal = ({ onClose, onLogin }) => {
     }
 
     try {
-      const endpoint = activeTab === 'signup' ? '/api/auth/signup' : '/api/auth/login';
+      const endpoint = '/api/auth/login';
       const response = await fetch(`http://localhost:5000${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
