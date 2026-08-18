@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getImages } from '../services/api';
+import { getImages, API_BASE_URL } from '../services/api';
 import TopHeader from './TopHeader';
 import './Views.css';
 
@@ -51,7 +51,7 @@ const ImagesView = ({ isSidebarOpen, onToggleSidebar, user, onLoginClick, onProf
             {images.map((image, idx) => (
               <div key={idx} className="image-card">
                 <img 
-                  src={`http://localhost:5000/api${image.url}`} 
+                  src={`${API_BASE_URL}${image.url}`} 
                   alt={image.name} 
                   className="image-thumbnail"
                 />

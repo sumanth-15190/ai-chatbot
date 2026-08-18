@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getLibrary } from '../services/api';
+import { getLibrary, API_BASE_URL } from '../services/api';
 import TopHeader from './TopHeader';
 import './Views.css';
 
@@ -52,7 +52,7 @@ const LibraryView = ({ isSidebarOpen, onToggleSidebar, user, onLoginClick, onPro
               <div key={idx} className="file-card">
                 <div className="file-icon">📄</div>
                 <div className="file-name" title={file.name}>{file.name}</div>
-                <a href={`http://localhost:5000/api${file.url}`} target="_blank" rel="noreferrer" className="file-download-btn">
+                <a href={`${API_BASE_URL}${file.url}`} target="_blank" rel="noreferrer" className="file-download-btn">
                   View
                 </a>
               </div>
