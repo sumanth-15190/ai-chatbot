@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  MessageSquarePlus, Mic, Volume2, BookOpen, Image as ImageIcon, 
-  Clock, Search, PanelLeftClose, MessageSquare, Trash2, 
-  Inbox, User, Settings, Sun, Moon, LogOut 
+  MessageSquarePlus, Mic, Volume2, BookOpen, 
+  Search, PanelLeftClose, MessageSquare, Trash2, 
+  Inbox 
 } from 'lucide-react';
-import LogoutModal from './LogoutModal';
 
 /**
  * Sidebar — Glassmorphic sidebar with branding, new chat, conversation history,
@@ -27,23 +26,7 @@ const Sidebar = ({
   isOpen,
   onToggleSidebar,
 }) => {
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const menuRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setShowProfileMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   /**
    * Group conversations by date (Today, Yesterday, Previous 7 Days, Older)
