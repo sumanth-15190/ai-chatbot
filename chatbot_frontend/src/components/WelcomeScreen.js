@@ -35,7 +35,7 @@ const WelcomeScreen = ({ onSendPrompt }) => {
   return (
     <div className="welcome-screen">
       <div className="welcome-icon">✨</div>
-      <h1 className="welcome-title">Hello, I'm NexusAI</h1>
+      <h1 className="welcome-title">Hello, I'm OmniChat</h1>
       <p className="welcome-subtitle">
         Your intelligent assistant powered by GPT-4o with real-time tools.
         I can check weather, search the web, and remember our conversations.

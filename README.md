@@ -1,4 +1,4 @@
-# NexusAI Chatbot
+# OmniChat Chatbot
 
 A full-stack, AI-powered conversational application featuring a React frontend, an Express proxy server, and a FastAPI/LangGraph backend that uses OpenRouter for its LLM capabilities.
 

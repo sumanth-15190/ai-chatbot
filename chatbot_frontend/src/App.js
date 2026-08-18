@@ -3,11 +3,20 @@ import { v4 as uuidv4 } from 'uuid';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
 import LoginModal from './components/LoginModal';
+import LogoutModal from './components/LogoutModal';
+import UserProfileModal from './components/UserProfileModal';
+import SettingsModal from './components/SettingsModal';
+import SearchModal from './components/SearchModal';
+import STTView from './components/STTView';
+import TTSView from './components/TTSView';
+import LibraryView from './components/LibraryView';
+import ImagesView from './components/ImagesView';
+import SplashScreen from './components/SplashScreen';
 import { sendMessage } from './services/api';
 import './App.css';
 
 /**
- * App — Main orchestrator for the NexusAI chatbot.
+ * App — Main orchestrator for the OmniChat chatbot.
  * Manages conversations, sessions, auth state, and coordinates all child components.
  * Persists state in localStorage for cross-refresh persistence.
  */
@@ -17,7 +26,41 @@ function App() {
     const saved = localStorage.getItem('nexusai_user');
     return saved ? JSON.parse(saved) : null;
   });
+  const [showSettings, setShowSettings] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('nexusai_theme') || 'dark';
+  });
+  
+  const [isAppLoaded, setIsAppLoaded] = useState(false);
+  
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
+  
+  const [currentView, setCurrentView] = useState('chat'); // 'chat' | 'stt' | 'tts'
+  
+  // --- Advanced Features State ---
+  const [isTTSActive, setIsTTSActive] = useState(false);
+  const [isSTTActive, setIsSTTActive] = useState(false);
+
+  const speakText = (text) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel(); // Stop any ongoing speech
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('nexusai_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
 
   // --- Conversations State ---
   const [conversations, setConversations] = useState(() => {
@@ -25,10 +68,7 @@ function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [activeSessionId, setActiveSessionId] = useState(() => {
-    const saved = localStorage.getItem('nexusai_active_session');
-    return saved || null;
-  });
+  const [activeSessionId, setActiveSessionId] = useState(null);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -56,22 +96,32 @@ function App() {
 
   // --- Create new chat ---
   const handleNewChat = useCallback(() => {
-    const newId = uuidv4();
-    const newConversation = {
-      id: newId,
-      title: 'New Chat',
-      messages: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    setConversations((prev) => [newConversation, ...prev]);
-    setActiveSessionId(newId);
+    setCurrentView('chat');
+    setConversations((prev) => {
+      const emptySession = prev.find(c => c.messages.length === 0 && c.title === 'New Chat');
+      if (emptySession) {
+        setActiveSessionId(emptySession.id);
+        return prev;
+      }
+      
+      const newId = uuidv4();
+      const newConversation = {
+        id: newId,
+        title: 'New Chat',
+        messages: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      setActiveSessionId(newId);
+      return [newConversation, ...prev];
+    });
   }, []);
 
   // --- Select existing conversation ---
   const handleSelectConversation = useCallback((sessionId) => {
     setActiveSessionId(sessionId);
+    setCurrentView('chat');
   }, []);
 
   // --- Delete conversation ---
@@ -88,6 +138,11 @@ function App() {
   // --- Send message ---
   const handleSendMessage = useCallback(
     async (messageText) => {
+      if (!user) {
+        setShowLoginModal(true);
+        return;
+      }
+
       let currentSessionId = activeSessionId;
 
       // If no active session, create one
@@ -140,6 +195,10 @@ function App() {
           toolsUsed: response.tools_used || [],
         };
 
+        if (isTTSActive) {
+          speakText(response.response);
+        }
+
         setConversations((prev) =>
           prev.map((conv) => {
             if (conv.id === currentSessionId) {
@@ -177,7 +236,7 @@ function App() {
         setIsLoading(false);
       }
     },
-    [activeSessionId]
+    [activeSessionId, user]
   );
 
   // --- Auth handlers ---
@@ -190,28 +249,97 @@ function App() {
     localStorage.removeItem('nexusai_user');
   };
 
+  const handleUpdateUser = (updatedData) => {
+    const newUser = { ...user, ...updatedData };
+    setUser(newUser);
+    localStorage.setItem('nexusai_user', JSON.stringify(newUser));
+  };
+
   // --- Session title ---
   const sessionTitle = activeConversation?.title || 'New Chat';
 
   return (
-    <div className="app-container">
-      <Sidebar
+    <>
+      {!isAppLoaded && <SplashScreen onFinish={() => setIsAppLoaded(true)} />}
+      
+      <div className={`app-container ${isAppLoaded ? 'app-reveal' : ''}`} style={{ display: isAppLoaded ? 'flex' : 'none' }}>
+        <Sidebar
+        isOpen={isSidebarOpen}
+        onToggleSidebar={toggleSidebar}
         conversations={conversations}
         activeSessionId={activeSessionId}
         onSelectConversation={handleSelectConversation}
         onNewChat={handleNewChat}
         onDeleteConversation={handleDeleteConversation}
+        onSearchClick={() => setShowSearchModal(true)}
+        user={user}
         user={user}
         onLoginClick={() => setShowLoginModal(true)}
-        onLogout={handleLogout}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        currentView={currentView}
+        setCurrentView={setCurrentView}
       />
 
-      <ChatArea
-        messages={activeMessages}
-        isLoading={isLoading}
-        onSendMessage={handleSendMessage}
-        sessionTitle={sessionTitle}
-      />
+      {currentView === 'chat' && (
+        <ChatArea
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={toggleSidebar}
+          messages={activeMessages}
+          isLoading={isLoading}
+          onSendMessage={handleSendMessage}
+          sessionTitle={sessionTitle}
+          isSTTActive={isSTTActive}
+          user={user}
+          onLoginClick={() => setShowLoginModal(true)}
+          onProfileClick={() => setShowProfileModal(true)}
+          onSettingsClick={() => setShowSettings(true)}
+        />
+      )}
+      
+      {currentView === 'stt' && (
+        <STTView
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={toggleSidebar}
+          user={user}
+          onLoginClick={() => setShowLoginModal(true)}
+          onProfileClick={() => setShowProfileModal(true)}
+          onSettingsClick={() => setShowSettings(true)}
+        />
+      )}
+      
+      {currentView === 'tts' && (
+        <TTSView
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={toggleSidebar}
+          user={user}
+          onLoginClick={() => setShowLoginModal(true)}
+          onProfileClick={() => setShowProfileModal(true)}
+          onSettingsClick={() => setShowSettings(true)}
+        />
+      )}
+      
+      {currentView === 'library' && (
+        <LibraryView
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={toggleSidebar}
+          user={user}
+          onLoginClick={() => setShowLoginModal(true)}
+          onProfileClick={() => setShowProfileModal(true)}
+          onSettingsClick={() => setShowSettings(true)}
+        />
+      )}
+
+      {currentView === 'image' && (
+        <ImagesView
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={toggleSidebar}
+          user={user}
+          onLoginClick={() => setShowLoginModal(true)}
+          onProfileClick={() => setShowProfileModal(true)}
+          onSettingsClick={() => setShowSettings(true)}
+        />
+      )}
 
       {showLoginModal && (
         <LoginModal
@@ -219,7 +347,51 @@ function App() {
           onLogin={handleLogin}
         />
       )}
-    </div>
+      </div>
+      {showProfileModal && user && (
+        <UserProfileModal 
+          user={user} 
+          onClose={() => setShowProfileModal(false)}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onSettingsClick={() => {
+            setShowProfileModal(false);
+            setShowSettings(true);
+          }}
+          onLogout={() => {
+            setShowProfileModal(false);
+            setShowLogoutModal(true);
+          }}
+          onUpdateUser={handleUpdateUser}
+        />
+      )}
+
+      {showLogoutModal && user && (
+        <LogoutModal 
+          user={user}
+          onConfirm={() => {
+            setShowLogoutModal(false);
+            handleLogout();
+          }}
+          onCancel={() => setShowLogoutModal(false)}
+        />
+      )}
+
+      {showSettings && (
+        <SettingsModal onClose={() => setShowSettings(false)} />
+      )}
+
+      {showSearchModal && (
+        <SearchModal 
+          conversations={conversations}
+          onSelectConversation={(id) => {
+            handleSelectConversation(id);
+            setShowSearchModal(false);
+          }}
+          onClose={() => setShowSearchModal(false)}
+        />
+      )}
+    </>
   );
 }
 

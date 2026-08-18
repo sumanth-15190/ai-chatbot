@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 /**
  * Message — Individual chat message bubble with different styles for user/assistant.
@@ -7,6 +7,71 @@ import React from 'react';
 const Message = ({ message }) => {
   const { role, content, timestamp, toolsUsed = [] } = message;
   const isUser = role === 'user';
+  
+  const [displayedContent, setDisplayedContent] = useState(content);
+  const [isTyping, setIsTyping] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handlePlay = () => {
+    if (!window.speechSynthesis) return;
+    
+    if (isPlaying) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      return;
+    }
+
+    // Strip markdown before reading
+    const textToRead = content.replace(/```[\s\S]*?```/g, 'Code block omitted.')
+                             .replace(/[*_~`]/g, '');
+
+    const utterance = new SpeechSynthesisUtterance(textToRead);
+    utterance.onend = () => setIsPlaying(false);
+    
+    setIsPlaying(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    if (isUser || !timestamp || !content) {
+      setDisplayedContent(content);
+      return;
+    }
+
+    const messageTime = new Date(timestamp).getTime();
+    const isNew = (Date.now() - messageTime) < 2000;
+
+    if (!isNew) {
+      setDisplayedContent(content);
+      return;
+    }
+
+    setIsTyping(true);
+    setDisplayedContent('');
+    
+    const chars = Array.from(content);
+    let currentIndex = 0;
+    
+    const interval = setInterval(() => {
+      if (currentIndex < chars.length) {
+        const char = chars[currentIndex];
+        setDisplayedContent(prev => prev + char);
+        currentIndex++;
+      } else {
+        setIsTyping(false);
+        clearInterval(interval);
+      }
+    }, 15);
+
+    return () => clearInterval(interval);
+  }, [content, isUser, timestamp]);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   /**
    * Format message content — handle basic markdown-like formatting
@@ -99,7 +164,8 @@ const Message = ({ message }) => {
       </div>
       <div>
         <div className="message-content">
-          {formatContent(content)}
+          {formatContent(displayedContent)}
+          {isTyping && <span className="typewriter-cursor"></span>}
         </div>
         <div className="message-meta">
           {toolsUsed.length > 0 && (
@@ -108,6 +174,19 @@ const Message = ({ message }) => {
             </>
           )}
           <span>{formatTime(timestamp)}</span>
+          
+          {!isUser && !isTyping && (
+            <div className="message-actions">
+              <button onClick={handleCopy} title="Copy" className="action-btn">
+                {copied ? '✅' : '📋'}
+              </button>
+              <button className="action-btn" onClick={handlePlay} title={isPlaying ? "Stop reading" : "Read aloud"}>
+                {isPlaying ? '⏹️' : '🔊'}
+              </button>
+              <button className="action-btn" title="Good response">👍</button>
+              <button className="action-btn" title="Bad response">👎</button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -68,17 +68,24 @@ def retrieve_memory_node(state: AgentState) -> dict:
         k=3
     )
 
+    from datetime import datetime
+    current_date = datetime.now().strftime("%B %d, %Y")
+
     # Build the system prompt with memory context
     system_content = (
-        "You are NexusAI, a helpful and creative AI assistant. You have access to tools "
-        "for checking weather and searching the web. Use them when the user's question "
-        "requires real-time data or information you're unsure about.\n\n"
+        f"You are OmniChat, a helpful and creative AI assistant. The current date is {current_date}. "
+        "You have access to tools for checking weather, searching the web, and querying internal documents.\n\n"
+        "CRITICAL INSTRUCTION FOR CURRENT EVENTS:\n"
+        "You MUST use the `web_search` tool for any questions about current events, politics, office holders, "
+        "news, or any facts that could have changed recently. Do NOT rely on your internal training data or "
+        "previous conversation memory for current facts, as they may be outdated. ALWAYS verify with a fresh web search.\n\n"
         "Guidelines:\n"
         "• Be conversational, friendly, and engaging\n"
         "• Use markdown formatting for structured responses\n"
         "• When using tools, explain what you're doing\n"
         "• If a tool fails, let the user know gracefully\n"
-        "• Remember context from the conversation\n"
+        "• Remember context from the conversation, but NEVER use it to answer factual questions about current events without verifying via web search.\n"
+        "• When using document search tools, synthesize the answer in your own words. Do NOT quote or show the raw document content in the chat history.\n"
     )
 
     if memories:

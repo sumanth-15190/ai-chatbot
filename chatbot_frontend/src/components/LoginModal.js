@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import MockGoogleLogin from './MockGoogleLogin';
 
 /**
  * LoginModal — Glassmorphic modal with Login/Sign Up tabs.
@@ -12,13 +13,25 @@ const LoginModal = ({ onClose, onLogin }) => {
     password: '',
   });
   const [error, setError] = useState('');
+  const [showMockGoogle, setShowMockGoogle] = useState(false);
+
+  const handleGoogleSuccess = (mockUser) => {
+    // Treat as successful login
+    localStorage.setItem('nexusai_user', JSON.stringify(mockUser));
+    
+    // Simulate sending a welcome email
+    alert(`📧 Email sent to ${mockUser.email}!\n\nThanks for logging on to OmniChat! You're going to love it here.`);
+    
+    onLogin(mockUser);
+    onClose();
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -44,18 +57,41 @@ const LoginModal = ({ onClose, onLogin }) => {
       return;
     }
 
-    // Mock auth — store in localStorage
-    const user = {
-      name: formData.name || formData.email.split('@')[0],
-      email: formData.email,
-      avatar: formData.name
-        ? formData.name.charAt(0).toUpperCase()
-        : formData.email.charAt(0).toUpperCase(),
-    };
+    try {
+      const endpoint = activeTab === 'signup' ? '/api/auth/signup' : '/api/auth/login';
+      const response = await fetch(`http://localhost:5000${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password
+        })
+      });
 
-    localStorage.setItem('nexusai_user', JSON.stringify(user));
-    onLogin(user);
-    onClose();
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Authentication failed');
+        return;
+      }
+
+      // Store in localStorage
+      const user = {
+        name: data.user.name || data.user.email.split('@')[0],
+        email: data.user.email,
+        avatar: data.user.name
+          ? data.user.name.charAt(0).toUpperCase()
+          : data.user.email.charAt(0).toUpperCase(),
+        id: data.user.id
+      };
+
+      localStorage.setItem('nexusai_user', JSON.stringify(user));
+      onLogin(user);
+      onClose();
+    } catch (err) {
+      setError('Failed to connect to the server');
+    }
   };
 
   const handleOverlayClick = (e) => {
@@ -71,89 +107,125 @@ const LoginModal = ({ onClose, onLogin }) => {
           ✕
         </button>
 
-        <div className="modal-header">
-          <div className="modal-header-icon">🔮</div>
-          <h2>{activeTab === 'login' ? 'Welcome Back' : 'Create Account'}</h2>
-          <p>
-            {activeTab === 'login'
-              ? 'Sign in to access your conversations'
-              : 'Join NexusAI to save your chats'}
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: '500', margin: '0 0 12px 0' }}>Log in or sign up</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '15px', margin: 0 }}>
+            You'll get smarter responses and can<br/>upload files, images, and more.
           </p>
         </div>
 
-        <div className="modal-tabs">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
           <button
-            className={`modal-tab ${activeTab === 'login' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('login'); setError(''); }}
+            type="button"
+            onClick={() => setShowMockGoogle(true)}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+              padding: '14px', background: 'transparent',
+              border: '1px solid var(--glass-border)', borderRadius: '24px',
+              color: 'var(--text-primary)', fontSize: '16px', fontWeight: '500',
+              cursor: 'pointer', transition: 'background 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'var(--glass-bg-hover)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            Log In
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style={{ width: '20px', height: '20px' }} />
+            Continue with Google
           </button>
+          
           <button
-            className={`modal-tab ${activeTab === 'signup' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('signup'); setError(''); }}
+            type="button"
+            onClick={() => alert('Apple login not implemented yet')}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+              padding: '14px', background: 'transparent',
+              border: '1px solid var(--glass-border)', borderRadius: '24px',
+              color: 'var(--text-primary)', fontSize: '16px', fontWeight: '500',
+              cursor: 'pointer', transition: 'background 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'var(--glass-bg-hover)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            Sign Up
+            <span style={{ fontSize: '20px' }}></span>
+            Continue with Apple
+          </button>
+
+          <button
+            type="button"
+            onClick={() => alert('Phone login not implemented yet')}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+              padding: '14px', background: 'transparent',
+              border: '1px solid var(--glass-border)', borderRadius: '24px',
+              color: 'var(--text-primary)', fontSize: '16px', fontWeight: '500',
+              cursor: 'pointer', transition: 'background 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'var(--glass-bg-hover)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            <span style={{ fontSize: '20px' }}>📞</span>
+            Continue with phone
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {activeTab === 'signup' && (
-            <div className="form-group">
-              <label className="form-label">Full Name</label>
-              <input
-                type="text"
-                name="name"
-                className="form-input"
-                placeholder="John Doe"
-                value={formData.name}
-                onChange={handleChange}
-              />
-            </div>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px', color: 'var(--text-secondary)' }}>
+          <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }}></div>
+          <span style={{ padding: '0 16px', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>or</span>
+          <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }}></div>
+        </div>
 
-          <div className="form-group">
-            <label className="form-label">Email</label>
-            <input
-              type="email"
-              name="email"
-              className="form-input"
-              placeholder="you@example.com"
-              value={formData.email}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Password</label>
-            <input
-              type="password"
-              name="password"
-              className="form-input"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={handleChange}
-            />
-          </div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email address"
+            value={formData.email}
+            onChange={handleChange}
+            style={{
+              width: '100%', padding: '16px', background: 'transparent',
+              border: '1px solid var(--glass-border)', borderRadius: '12px',
+              color: 'var(--text-primary)', fontSize: '16px', boxSizing: 'border-box'
+            }}
+          />
+          
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            style={{
+              width: '100%', padding: '16px', background: 'transparent',
+              border: '1px solid var(--glass-border)', borderRadius: '12px',
+              color: 'var(--text-primary)', fontSize: '16px', boxSizing: 'border-box'
+            }}
+          />
 
           {error && (
-            <div style={{
-              color: '#ef4444',
-              fontSize: '13px',
-              marginBottom: '12px',
-              padding: '8px 12px',
-              background: 'rgba(239, 68, 68, 0.1)',
-              borderRadius: '8px',
-              border: '1px solid rgba(239, 68, 68, 0.2)'
-            }}>
+            <div style={{ color: '#ef4444', fontSize: '14px', textAlign: 'center' }}>
               {error}
             </div>
           )}
 
-          <button type="submit" className="form-submit">
-            {activeTab === 'login' ? '🚀 Sign In' : '✨ Create Account'}
+          <button 
+            type="submit" 
+            style={{
+              width: '100%', padding: '16px', background: '#fff',
+              border: 'none', borderRadius: '24px',
+              color: '#000', fontSize: '16px', fontWeight: '500',
+              cursor: 'pointer', marginTop: '8px'
+            }}
+          >
+            Continue
           </button>
         </form>
       </div>
+      
+      {showMockGoogle && (
+        <MockGoogleLogin 
+          onClose={() => setShowMockGoogle(false)} 
+          onSuccess={handleGoogleSuccess} 
+        />
+      )}
     </div>
   );
 };

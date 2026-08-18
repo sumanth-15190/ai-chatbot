@@ -66,4 +66,30 @@ export const checkHealth = async () => {
   }
 };
 
+/**
+ * Get library documents
+ */
+export const getLibrary = async () => {
+  try {
+    const response = await apiClient.get('/library');
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch library:', error);
+    return { files: [] };
+  }
+};
+
+/**
+ * Get images
+ */
+export const getImages = async () => {
+  try {
+    const response = await apiClient.get('/images');
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch images:', error);
+    return { files: [] };
+  }
+};
+
 export default apiClient;

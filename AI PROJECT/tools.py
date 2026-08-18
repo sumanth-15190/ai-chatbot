@@ -91,4 +91,38 @@ def web_search(query: str) -> str:
 
 
 # Export tools list for the agent
-available_tools = [get_weather, web_search]
+import chromadb
+
+@tool
+def query_documents(query: str) -> str:
+    """Query the internal document knowledge base. Use this when the user asks questions about specific documents, company data, or any uploaded text/PDF files."""
+    try:
+        client = chromadb.PersistentClient(path="./chroma_db")
+        collection = client.get_or_create_collection(
+            name="document_knowledge",
+            metadata={"hnsw:space": "cosine"}
+        )
+        
+        results = collection.query(
+            query_texts=[query],
+            n_results=3
+        )
+        
+        if not results["documents"] or not results["documents"][0]:
+            return f"No relevant information found in the document knowledge base for: {query}"
+            
+        formatted = f"📄 Document Search Results for: {query}\n\n"
+        for i, doc in enumerate(results["documents"][0], 1):
+            metadata = results["metadatas"][0][i-1] if results["metadatas"] else {}
+            source = metadata.get("source", "Unknown")
+            page = metadata.get("page", "Unknown")
+            
+            # Truncate slightly if too long
+            content = doc[:500] + "..." if len(doc) > 500 else doc
+            formatted += f"**Result {i}** (Source: {source}, Page: {page}):\n{content}\n\n"
+            
+        return formatted
+    except Exception as e:
+        return f"Failed to query document knowledge base: {str(e)}"
+
+available_tools = [get_weather, web_search, query_documents]
