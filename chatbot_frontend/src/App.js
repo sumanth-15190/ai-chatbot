@@ -132,7 +132,7 @@ function App() {
         setActiveSessionId(null);
       }
     },
-    [activeSessionId, isTTSActive, isSTTActive]
+    [activeSessionId]
   );
 
   // --- Send message ---
@@ -236,7 +236,7 @@ function App() {
         setIsLoading(false);
       }
     },
-    [activeSessionId, user]
+    [activeSessionId, user, isTTSActive]
   );
 
   // --- Auth handlers ---
