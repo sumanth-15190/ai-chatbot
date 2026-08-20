@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../services/api';
 import { Mic, Square } from 'lucide-react';
 import Message from './Message';
 import TypingIndicator from './TypingIndicator';
@@ -134,7 +135,7 @@ const ChatArea = ({
     formData.append('file', file);
     
     try {
-      const response = await axios.post('http://localhost:5000/api/upload', formData, {
+      const response = await axios.post(`${API_BASE_URL}/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

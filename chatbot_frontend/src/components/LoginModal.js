@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import MockGoogleLogin from './MockGoogleLogin';
+import { API_BASE_URL } from '../services/api';
 
 /**
  * LoginModal — Glassmorphic modal with Login/Sign Up tabs.
@@ -52,8 +53,8 @@ const LoginModal = ({ onClose, onLogin }) => {
     }
 
     try {
-      const endpoint = '/api/auth/login';
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      const endpoint = '/auth/login';
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
