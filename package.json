@@ -1,0 +1,9 @@
+{
+  "name": "omnichat-workspace",
+  "version": "1.0.0",
+  "description": "OmniChat Chatbot - Full Stack Application",
+  "scripts": {
+    "start": "python run.py",
+    "start:windows": "run.bat"
+  }
+}
